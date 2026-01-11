@@ -77,12 +77,12 @@ export default function GamePage() {
   useEffect(() => {
     if (!isPlaying) return
     const scenarioInterval = setInterval(() => {
-      if (Math.random() < 0.15 && !activeScenario) {
+      if (Math.random() < 0.60 && !activeScenario) {
         const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)]
         setActiveScenario(randomScenario)
         setCurrentPrice((prev) => prev * (1 + randomScenario.impact / 100))
       }
-    }, 10000)
+    }, 2000)
     return () => clearInterval(scenarioInterval)
   }, [isPlaying, activeScenario])
 
