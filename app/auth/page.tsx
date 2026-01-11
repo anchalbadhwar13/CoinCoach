@@ -16,6 +16,18 @@ export default function AuthPage() {
     e.preventDefault()
     // Handle auth logic here
     console.log(isLogin ? 'Login' : 'Signup', { email, password, name })
+    
+    // Clear lesson progress on login/signup for fresh start
+    localStorage.removeItem('lesson-1-progress')
+    localStorage.removeItem('lesson-1-completed')
+    localStorage.removeItem('lesson-2-progress')
+    localStorage.removeItem('lesson-2-completed')
+    localStorage.removeItem('lesson-3-progress')
+    localStorage.removeItem('lesson-3-completed')
+    localStorage.removeItem('quiz-completed')
+    localStorage.removeItem('quiz-score')
+    localStorage.removeItem('quiz-passed')
+    
     // Redirect to onboarding after signup, dashboard after login
     if (!isLogin) {
       window.location.href = '/onboarding'

@@ -108,7 +108,16 @@ export default function OnboardingPage() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
-      // Complete onboarding
+      // Complete onboarding - Clear all lesson progress for new user
+      localStorage.removeItem('lesson-1-progress')
+      localStorage.removeItem('lesson-1-completed')
+      localStorage.removeItem('lesson-2-progress')
+      localStorage.removeItem('lesson-2-completed')
+      localStorage.removeItem('lesson-3-progress')
+      localStorage.removeItem('lesson-3-completed')
+      localStorage.removeItem('quiz-completed')
+      localStorage.removeItem('quiz-score')
+      localStorage.removeItem('quiz-passed')
       router.push('/dashboard')
     }
   }
