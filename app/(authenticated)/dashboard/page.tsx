@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { BookOpen, Eye, Shield, Award, Trophy, Target, TrendingUp } from 'lucide-react'
 import GlassCard from '@/components/GlassCard'
@@ -24,38 +25,86 @@ interface Badge {
   color: string
 }
 
-export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'learn' | 'profile'>('learn')
+const baseLessons = [
+  {
+    id: 1,
+    title: 'What is a Wallet?',
+    description: 'Learn the fundamentals of cryptocurrency wallets',
+    icon: Shield,
+    views: 1234,
+  },
+  {
+    id: 2,
+    title: 'Market Cap vs. Price',
+    description: 'Understand the difference between market capitalization and token price',
+    icon: TrendingUp,
+    views: 987,
+  },
+  {
+    id: 3,
+    title: 'Candlestick Charts',
+    description: 'Master reading candlestick patterns for trading',
+    icon: Target,
+    views: 654,
+  },
+]
 
-  const lessons: Lesson[] = [
-    {
-      id: 1,
-      title: 'What is a Wallet?',
-      description: 'Learn the fundamentals of cryptocurrency wallets',
-      progress: 75,
-      icon: Shield,
-      views: 1234,
-      completed: false,
-    },
-    {
-      id: 2,
-      title: 'Market Cap vs. Price',
-      description: 'Understand the difference between market capitalization and token price',
-      progress: 50,
-      icon: TrendingUp,
-      views: 987,
-      completed: false,
-    },
-    {
-      id: 3,
-      title: 'Candlestick Charts',
-      description: 'Master reading candlestick patterns for trading',
-      progress: 100,
-      icon: Target,
-      views: 654,
-      completed: true,
-    },
-  ]
+export default function DashboardPage() {
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState<'learn' | 'profile'>('learn')
+  const [lessons, setLessons] = useState<Lesson[]>([])
+
+  // Load progress from localStorage
+  useEffect(() => {
+    const loadLessonProgress = () => {
+      const updatedLessons: Lesson[] = baseLessons.map((baseLesson) => {
+        // Get progress from localStorage
+        const progressData = localStorage.getItem(`lesson-${baseLesson.id}-progress`)
+        const completed = localStorage.getItem(`lesson-${baseLesson.id}-completed`) === 'true'
+        
+        let progress = 0
+        if (progressData) {
+          try {
+            const parsed = JSON.parse(progressData)
+            progress = parsed.progress || 0
+          } catch (e) {
+            progress = 0
+          }
+        }
+
+        return {
+          ...baseLesson,
+          progress,
+          completed,
+        }
+      })
+      
+      setLessons(updatedLessons)
+    }
+
+    // Load progress on mount
+    loadLessonProgress()
+
+    // Refresh progress when page becomes visible (when user returns from lesson)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadLessonProgress()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Also refresh on focus as backup
+    const handleFocus = () => {
+      loadLessonProgress()
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [])
 
   const badges: Badge[] = [
     {
@@ -134,7 +183,10 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: idx * 0.1 }}
                 >
-                  <GlassCard className="p-6 glass-card-hover cursor-pointer">
+                  <GlassCard 
+                    className="p-6 glass-card-hover cursor-pointer transition-all hover:scale-105"
+                    onClick={() => router.push(`/dashboard/lesson/${lesson.id}`)}
+                  >
                     <div className="flex items-start justify-between mb-4">
                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                         lesson.completed
@@ -170,6 +222,12 @@ export default function DashboardPage() {
                         Completed
                       </div>
                     )}
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <div className="text-sm text-cyber-cyan font-medium flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Start Learning →
+                      </div>
+                    </div>
                   </GlassCard>
                 </motion.div>
               )
