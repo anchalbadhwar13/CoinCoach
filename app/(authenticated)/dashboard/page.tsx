@@ -136,11 +136,17 @@ export default function DashboardPage() {
   // Check if all lessons are 100% complete
   const allLessonsComplete = lessons.length > 0 && lessons.every(lesson => lesson.progress === 100)
 
-  // Calculate Safety Score based on progress and badges
-  const safetyScore = Math.round(
-    (lessons.reduce((acc, lesson) => acc + lesson.progress, 0) / (lessons.length * 100)) * 50 +
-    (badges.filter(b => b.unlocked).length / badges.length) * 50
-  )
+  // Get quiz score from localStorage
+  const quizScore = localStorage.getItem('quiz-completed') === 'true' 
+    ? parseInt(localStorage.getItem('quiz-score') || '0', 10) 
+    : null
+
+  // Calculate Safety Score with quiz impact
+  const lessonProgressScore = (lessons.reduce((acc, lesson) => acc + lesson.progress, 0) / (lessons.length * 100)) * 40
+  const badgesScore = (badges.filter(b => b.unlocked).length / badges.length) * 30
+  const quizScoreComponent = quizScore !== null ? (quizScore / 100) * 30 : 0
+  
+  const safetyScore = Math.round(lessonProgressScore + badgesScore + quizScoreComponent)
 
   // Count completed lessons
   const lessonsCompleted = lessons.filter(lesson => lesson.completed).length
@@ -370,7 +376,7 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-bold mb-6">Quiz Progress</h2>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <h3 className="font-bold mb-2">Final Knowledge Assessment</h3>
                   <p className="text-sm text-gray-400 mb-4">
                     {allLessonsComplete
@@ -378,21 +384,33 @@ export default function DashboardPage() {
                       : `Complete all ${lessons.length} modules to unlock the final quiz (${lessons.filter(l => l.progress === 100).length}/${lessons.length} complete)`}
                   </p>
                   {typeof window !== 'undefined' && localStorage.getItem('quiz-completed') === 'true' && (
-                    <div className="flex items-center gap-3 mt-4">
-                      <CheckCircle2 className="w-5 h-5 text-cyber-neon-green" />
-                      <div>
-                        <p className="text-sm font-medium text-cyber-neon-green">Quiz Completed</p>
-                        <p className="text-xs text-gray-400">Score: {localStorage.getItem('quiz-score')}%</p>
+                    <div className="space-y-3 mt-4">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className={`w-5 h-5 ${quizScore >= 80 ? 'text-cyber-neon-green' : 'text-red-500'}`} />
+                        <div>
+                          <p className={`text-sm font-medium ${quizScore >= 80 ? 'text-cyber-neon-green' : 'text-red-500'}`}>
+                            {quizScore >= 80 ? 'Quiz Passed' : 'Quiz Failed'}
+                          </p>
+                          <p className="text-xs text-gray-400">Score: {quizScore}% (Impact on Safety Score: +{Math.round((quizScore / 100) * 30)} points)</p>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-                {allLessonsComplete && (
+                {allLessonsComplete && !localStorage.getItem('quiz-completed') && (
                   <button
                     onClick={() => router.push('/dashboard/quiz')}
                     className="btn-primary"
                   >
                     Take Quiz
+                  </button>
+                )}
+                {localStorage.getItem('quiz-completed') === 'true' && (
+                  <button
+                    onClick={() => router.push('/dashboard/quiz')}
+                    className="btn-secondary"
+                  >
+                    Retake Quiz
                   </button>
                 )}
               </div>
